@@ -36,6 +36,30 @@ ng build
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
+## Deploying to Vercel
+
+This repository includes `vercel.json` with the Angular build output path and SPA rewrites for routes such as `/dashboard`, `/yearly-plan`, and `/month/September`.
+
+### Vercel dashboard
+
+1. Import this repository into Vercel.
+2. Keep the detected framework as Angular.
+3. Use the default build command: `npm run build`.
+4. Deploy.
+
+### Vercel CLI
+
+From the project directory:
+
+```bash
+npm install -g vercel
+vercel
+```
+
+The configured output directory is `dist/investment-planner/browser`.
+
+The planner currently stores entered data in browser `localStorage`. A backend is required to synchronize data between different browsers or devices.
+
 ## Running unit tests
 
 To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
