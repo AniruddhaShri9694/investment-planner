@@ -16,8 +16,7 @@
             </div>
             <p class="panel-copy">Select a month to open its detailed investment plan.</p>
             <div class="month-grid">@for (month of store.months; track month.name) {<a class="month-tile"
-                    [routerLink]="['/month', month.name]"><span>{{ month.short }}</span><strong>₹{{
-                        store.formatCurrency(store.total()) }}</strong><i
+                    [routerLink]="['/month', month.name]"><span>{{ month.short }}</span>@if (store.hasSalaryFor(month.name)) {<strong>₹{{ store.formatCurrency(store.availableBalanceFor(month.name)) }}</strong><small class="month-value-label">Available</small>} @else {<strong class="not-set-value">Salary not set</strong>}<i
                         class="bi bi-arrow-up-right"></i></a>}</div>
             <div class="panel-footer"><span><i class="legend-dot"></i> Planned</span><a routerLink="/yearly-plan">Open
                     yearly plan <i class="bi bi-arrow-right"></i></a></div>

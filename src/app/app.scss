@@ -1278,6 +1278,20 @@ h1 span {
     color: #d9f0ee;
 }
 
+.month-value-label {
+    display: block;
+    margin-top: 3px;
+    color: #70c5bd;
+    font: 700 9px Arial;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.not-set-value {
+    color: #9cc3c8 !important;
+    font: 400 14px Arial !important;
+}
+
 .month-tile.current {
     background: #14536a;
     border-color: #70c5bd;
