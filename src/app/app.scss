@@ -71,7 +71,7 @@
 }
 
 .page-shell {
-    width: min(1240px, 90vw);
+    // width: min(1240px, 90vw);
     height: calc(100vh - 77px);
     box-sizing: border-box;
     overflow-y: auto;
@@ -691,7 +691,7 @@ h3 {
     }
 
     .page-shell {
-        width: 90vw;
+        // width: 90vw;
         padding-top: 35px;
     }
 
