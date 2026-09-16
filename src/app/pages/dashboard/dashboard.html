@@ -15,9 +15,14 @@
                 </div><span class="year-pill">FY {{ store.currentYear }}</span>
             </div>
             <p class="panel-copy">Select a month to open its detailed investment plan.</p>
-            <div class="month-grid">@for (month of store.months; track month.name) {<a class="month-tile"
-                    [routerLink]="['/month', month.name]"><span>{{ month.short }}</span>@if (store.hasSalaryFor(month.name)) {<strong>₹{{ store.formatCurrency(store.availableBalanceFor(month.name)) }}</strong><small class="month-value-label">Available</small>} @else {<strong class="not-set-value">Salary not set</strong>}<i
-                        class="bi bi-arrow-up-right"></i></a>}</div>
+            <div class="month-grid">
+                @for (month of store.months; track month.name) {
+                    <a class="month-tile"
+                    [routerLink]="['/month', month.name]"><span>{{ month.short }}</span>@if
+                    (store.hasSalaryFor(month.name)) {<strong>₹{{
+                        store.formatCurrency(store.availableBalanceFor(month.name)) }}</strong><small
+                        class="month-value-label">Available</small>} @else {<strong class="not-set-value">Salary not
+                        set</strong>}<i class="bi bi-arrow-up-right"></i></a>}</div>
             <div class="panel-footer"><span><i class="legend-dot"></i> Planned</span><a routerLink="/yearly-plan">Open
                     yearly plan <i class="bi bi-arrow-right"></i></a></div>
         </article>
@@ -28,7 +33,9 @@
                     <h2>Next month plan</h2>
                 </div><i class="bi bi-calendar3 panel-symbol"></i>
             </div>
-            <div class="empty-next"><i class="bi bi-calendar3"></i><strong>Your next month plan is ready to build.</strong><span>Choose a month and add your first category.</span></div><a class="full-button" routerLink="/yearly-plan">Choose a month <i class="bi bi-arrow-up-right"></i></a>
+            <div class="empty-next"><i class="bi bi-calendar3"></i><strong>Your next month plan is ready to
+                    build.</strong><span>Choose a month and add your first category.</span></div><a class="full-button"
+                routerLink="/yearly-plan">Choose a month <i class="bi bi-arrow-up-right"></i></a>
         </article>
     </section>
 </main>
