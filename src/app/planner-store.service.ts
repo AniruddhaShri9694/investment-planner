@@ -72,36 +72,17 @@ export class PlannerStore {
       {
         name: 'Fixed Commitments',
         color: 'mint',
-        items: [
-          { name: 'Home Loan EMI', amount: 35700 },
-          { name: 'Home Loan Repayment', amount: 12000 },
-          { name: "Anvi School Fee's", amount: 8062 },
-          { name: 'House Maintenance', amount: 2375 },
-          { name: 'SSY', amount: 500 },
-          { name: 'LIC', amount: 3000 },
-          { name: 'Vehicle Loan', amount: 4134 },
-          { name: 'Credit Card bill', amount: 2500 },
-        ],
+        items: [],
       },
       {
         name: 'Household expenses',
         color: 'blue',
-        items: [
-          { name: 'House Budget', amount: 16000 },
-          { name: 'EV Recharge', amount: 500 },
-          { name: 'Travelling', amount: 2500 },
-          { name: 'Food and Other', amount: 2000 },
-        ],
+        items: [],
       },
       {
         name: 'Investment & Savings',
         color: 'orange',
-        items: [
-          { name: 'RD', amount: 20000 },
-          { name: 'SIP', amount: 2000 },
-          { name: 'NPS', amount: 0 },
-          { name: 'LIC', amount: 3000 },
-        ],
+        items: [],
       },
     ];
   }
