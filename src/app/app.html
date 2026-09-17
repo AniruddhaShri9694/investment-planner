@@ -1,18 +1,46 @@
 <header class="topbar">
-  <a class="brand" routerLink="/dashboard"><span class="brand-mark">F</span><span>Folio</span></a>
+  <a class="brand" routerLink="/dashboard"
+    ><span class="brand-mark">F</span><span>Folio</span></a
+  >
   <nav class="topnav" aria-label="Primary navigation">
-    <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
+    <a
+      routerLink="/dashboard"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      >Dashboard</a
+    >
     <a routerLink="/yearly-plan" routerLinkActive="active">Yearly plan</a>
   </nav>
   <div class="profile-wrap">
-    <button class="profile" type="button" aria-haspopup="menu" [attr.aria-expanded]="profileOpen" (click)="toggleProfile()">
-      <span class="profile-dot">{{ initials() }}</span><span class="profile-name">{{ userName }}</span><i class="bi bi-chevron-down"></i>
+    <button
+      class="profile"
+      type="button"
+      aria-haspopup="menu"
+      [attr.aria-expanded]="profileOpen"
+      (click)="toggleProfile()"
+    >
+      <span class="profile-dot">{{ initials() }}</span
+      ><span class="profile-name">{{ userName }}</span
+      ><i class="bi bi-chevron-down"></i>
     </button>
     @if (profileOpen) {
       <div class="profile-menu" role="menu">
         <span class="profile-menu-label">Display name</span>
-        <input class="profile-input" type="text" [(ngModel)]="userName" (blur)="saveUserName()" (keyup.enter)="saveUserName()" aria-label="Display name">
-        <button class="profile-save" type="button" (click)="saveUserName(); profileOpen = false">Save profile</button>
+        <input
+          class="profile-input"
+          type="text"
+          [(ngModel)]="userName"
+          (blur)="saveUserName()"
+          (keyup.enter)="saveUserName()"
+          aria-label="Display name"
+        />
+        <button
+          class="profile-save"
+          type="button"
+          (click)="saveUserName(); profileOpen = false"
+        >
+          Save profile
+        </button>
       </div>
     }
   </div>

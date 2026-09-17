@@ -1,18 +1,27 @@
-@import 'bootstrap/scss/bootstrap';
-@import 'bootstrap-icons/font/bootstrap-icons.css';
-@import './app/app.scss';
+@import "bootstrap/scss/bootstrap";
+@import "bootstrap-icons/font/bootstrap-icons.css";
+@import "./app/app.scss";
 
-html, body { height: 100%; overflow: hidden; }
-body { margin: 0; background: #082b3a; color: #d9f0ee; }
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  margin: 0;
+  background: #082b3a;
+  color: #d9f0ee;
+}
 
-body, .page-shell {
-	--ink: #d9f0ee;
-	--muted: #9cc3c8;
-	--line: #286078;
-	--paper: #10465a;
-	--green: #70c5bd;
-	--soft-green: #164f61;
-	--coral: #c97769;
-	--blue: #1d6074;
-	--yellow: #dba85f;
+body,
+.page-shell {
+  --ink: #d9f0ee;
+  --muted: #9cc3c8;
+  --line: #286078;
+  --paper: #10465a;
+  --green: #70c5bd;
+  --soft-green: #164f61;
+  --coral: #c97769;
+  --blue: #1d6074;
+  --yellow: #dba85f;
 }

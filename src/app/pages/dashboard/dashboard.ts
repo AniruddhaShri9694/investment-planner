@@ -6,7 +6,7 @@ import { PlannerStore } from '../../planner-store.service';
 @Component({
   selector: 'app-dashboard',
   imports: [FormsModule, RouterLink],
-  templateUrl: './dashboard.html'
+  templateUrl: './dashboard.html',
 })
 export class Dashboard {
   protected readonly store = inject(PlannerStore);

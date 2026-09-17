@@ -1,16 +1,194 @@
 <main class="page-shell">
-  <section class="page-heading"><div><p class="eyebrow">Monthly plan <span>•</span> {{ store.currentYear }}</p><h1>{{ month }} <span>detail</span></h1><p class="heading-copy">Tune categories and amounts for this month. Totals recalculate as you work.</p></div><a class="outline-action" routerLink="/yearly-plan"><i class="bi bi-arrow-left"></i> Back to yearly plan</a></section>
-  <section class="month-income panel"><div><p class="eyebrow">{{ month }} salary planning</p><h2>Salary and available balance</h2></div><label class="salary-field">{{ month }} salary<input class="salary-input" type="number" min="0" inputmode="decimal" [ngModel]="store.salaryFor(month)" (ngModelChange)="store.setSalary(month, $event)" placeholder="Enter salary"></label><div class="balance-result" [class.negative]="store.availableBalanceFor(month) < 0"><span>Available balance</span><strong>₹{{ store.formatCurrency(store.availableBalanceFor(month)) }}</strong><small>{{ !store.hasSalaryFor(month) ? 'Enter salary to calculate' : (store.availableBalanceFor(month) < 0 ? 'Planned values exceed salary' : 'Available for additional investing or expenses') }}</small></div></section>
+  <section class="page-heading">
+    <div>
+      <p class="eyebrow">Monthly plan <span>•</span> {{ store.currentYear }}</p>
+      <h1>{{ month }} <span>detail</span></h1>
+      <p class="heading-copy">
+        Tune categories and amounts for this month. Totals recalculate as you
+        work.
+      </p>
+    </div>
+    <a class="outline-action" routerLink="/yearly-plan"
+      ><i class="bi bi-arrow-left"></i> Back to yearly plan</a
+    >
+  </section>
+  <section class="month-income panel">
+    <div>
+      <p class="eyebrow">{{ month }} salary planning</p>
+      <h2>Salary and available balance</h2>
+    </div>
+    <label class="salary-field"
+      >{{ month }} salary<input
+        class="salary-input"
+        type="number"
+        min="0"
+        inputmode="decimal"
+        [ngModel]="store.salaryFor(month)"
+        (ngModelChange)="store.setSalary(month, $event)"
+        placeholder="Enter salary"
+    /></label>
+    <div
+      class="balance-result"
+      [class.negative]="store.availableBalanceFor(month) < 0"
+    >
+      <span>Available balance</span
+      ><strong
+        >₹{{ store.formatCurrency(store.availableBalanceFor(month)) }}</strong
+      ><small>{{
+        !store.hasSalaryFor(month)
+          ? "Enter salary to calculate"
+          : store.availableBalanceFor(month) < 0
+            ? "Planned values exceed salary"
+            : "Available for additional investing or expenses"
+      }}</small>
+    </div>
+  </section>
   <section class="detail-section detail-page">
     @if (editing()) {
-      <div class="section-heading"><div><p class="eyebrow">Editing plan</p><h2>Categories and items</h2></div><div class="detail-actions"><button class="outline-action" type="button" (click)="finishEditing()"><i class="bi bi-check2"></i> Done editing</button><button class="primary-action" type="button" (click)="store.addCategory()"><i class="bi bi-plus-lg"></i> Add category</button></div></div>
-      <div class="editable-list">@for (category of store.categories(); track $index) {<article class="editable-category"><div class="editable-header"><label>Category name<input class="edit-input" [(ngModel)]="category.name" (ngModelChange)="store.refresh()"></label><strong>₹{{ store.formatCurrency(store.categoryTotal(category)) }}</strong><button class="icon-button" title="Remove category" aria-label="Remove category" (click)="store.removeCategory(category)"><i class="bi bi-trash3"></i></button></div><div class="editable-items">@for (item of category.items; track $index) {<div class="editable-row"><label>Item<input class="edit-input" [(ngModel)]="item.name" (ngModelChange)="store.refresh()"></label><label class="amount-field">Amount<input class="edit-input" type="number" [(ngModel)]="item.amount" (ngModelChange)="store.refresh()"></label><button class="icon-button" title="Remove item" aria-label="Remove item" (click)="store.removeItem(category, item)"><i class="bi bi-x-lg"></i></button></div>}<button class="add-item" type="button" (click)="store.addItem(category)"><i class="bi bi-plus"></i> Add item</button></div></article>}<button class="add-category wide" type="button" (click)="store.addCategory()"><i class="bi bi-plus-circle"></i><span>Add another category</span><small>Organise your plan your way</small></button></div>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Editing plan</p>
+          <h2>Categories and items</h2>
+        </div>
+        <div class="detail-actions">
+          <button
+            class="outline-action"
+            type="button"
+            (click)="finishEditing()"
+          >
+            <i class="bi bi-check2"></i> Done editing</button
+          ><button
+            class="primary-action"
+            type="button"
+            (click)="store.addCategory()"
+          >
+            <i class="bi bi-plus-lg"></i> Add category
+          </button>
+        </div>
+      </div>
+      <div class="editable-list">
+        @for (category of store.categories(); track $index) {
+          <article class="editable-category">
+            <div class="editable-header">
+              <label
+                >Category name<input
+                  class="edit-input"
+                  [(ngModel)]="category.name"
+                  (ngModelChange)="store.refresh()" /></label
+              ><strong
+                >₹{{
+                  store.formatCurrency(store.categoryTotal(category))
+                }}</strong
+              ><button
+                class="icon-button"
+                title="Remove category"
+                aria-label="Remove category"
+                (click)="store.removeCategory(category)"
+              >
+                <i class="bi bi-trash3"></i>
+              </button>
+            </div>
+            <div class="editable-items">
+              @for (item of category.items; track $index) {
+                <div class="editable-row">
+                  <label
+                    >Item<input
+                      class="edit-input"
+                      [(ngModel)]="item.name"
+                      (ngModelChange)="store.refresh()" /></label
+                  ><label class="amount-field"
+                    >Amount<input
+                      class="edit-input"
+                      type="number"
+                      [(ngModel)]="item.amount"
+                      (ngModelChange)="store.refresh()" /></label
+                  ><button
+                    class="icon-button"
+                    title="Remove item"
+                    aria-label="Remove item"
+                    (click)="store.removeItem(category, item)"
+                  >
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              }
+              <button
+                class="add-item"
+                type="button"
+                (click)="store.addItem(category)"
+              >
+                <i class="bi bi-plus"></i> Add item
+              </button>
+            </div>
+          </article>
+        }
+        <button
+          class="add-category wide"
+          type="button"
+          (click)="store.addCategory()"
+        >
+          <i class="bi bi-plus-circle"></i><span>Add another category</span
+          ><small>Organise your plan your way</small>
+        </button>
+      </div>
     } @else {
-      <div class="section-heading"><div><p class="eyebrow">Saved plan</p><h2>Categories and items</h2><p class="panel-copy">Your stored {{ month }} plan, ready to review.</p></div><button class="primary-action" type="button" (click)="startEditing()"><i class="bi bi-pencil"></i> Edit plan</button></div>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Saved plan</p>
+          <h2>Categories and items</h2>
+          <p class="panel-copy">
+            Your stored {{ month }} plan, ready to review.
+          </p>
+        </div>
+        <button class="primary-action" type="button" (click)="startEditing()">
+          <i class="bi bi-pencil"></i> Edit plan
+        </button>
+      </div>
       @if (store.categories().length) {
-        <div class="read-only-categories">@for (category of store.categories(); track $index) {<article class="read-only-category"><div class="read-only-heading"><div><span class="category-label">Category</span><h3>{{ category.name || 'Untitled category' }}</h3></div><strong>₹{{ store.formatCurrency(store.categoryTotal(category)) }}</strong></div><div class="read-only-items">@for (item of category.items; track $index) {<div><span>{{ item.name || 'Untitled item' }}</span><strong>₹{{ store.formatCurrency(item.amount) }}</strong></div>} @if (!category.items.length) {<p class="empty-category">No items added yet.</p>}</div></article>}</div>
+        <div class="read-only-categories">
+          @for (category of store.categories(); track $index) {
+            <article class="read-only-category">
+              <div class="read-only-heading">
+                <div>
+                  <span class="category-label">Category</span>
+                  <h3>{{ category.name || "Untitled category" }}</h3>
+                </div>
+                <strong
+                  >₹{{
+                    store.formatCurrency(store.categoryTotal(category))
+                  }}</strong
+                >
+              </div>
+              <div class="read-only-items">
+                @for (item of category.items; track $index) {
+                  <div>
+                    <span>{{
+                      item.name ||
+                        "Untitled
+              item"
+                    }}</span
+                    ><strong>₹{{ store.formatCurrency(item.amount) }}</strong>
+                  </div>
+                }
+                @if (!category.items.length) {
+                  <p class="empty-category">No items added yet.</p>
+                }
+              </div>
+            </article>
+          }
+        </div>
       } @else {
-        <div class="empty-plan"><i class="bi bi-folder2-open"></i><strong>Your plan is empty.</strong><span>Add a category to start organising your investments.</span><button class="primary-action" type="button" (click)="startEditing(); store.addCategory()"><i class="bi bi-plus-lg"></i> Add first category</button></div>
+        <div class="empty-plan">
+          <i class="bi bi-folder2-open"></i><strong>Your plan is empty.</strong
+          ><span>Add a category to start organising your investments.</span
+          ><button
+            class="primary-action"
+            type="button"
+            (click)="startEditing(); store.addCategory()"
+          >
+            <i class="bi bi-plus-lg"></i> Add first category
+          </button>
+        </div>
       }
     }
   </section>
