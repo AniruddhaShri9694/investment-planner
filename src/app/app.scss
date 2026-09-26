@@ -162,6 +162,8 @@ h3 {
   color: var(--green);
   text-decoration: none;
   font: 700 11px Arial;
+  gap: 5px;
+  background: navajowhite;
 }
 
 .icon-button {
@@ -1130,7 +1132,7 @@ h3 {
 
 .month-income {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 200px repeat(2, minmax(170px, 0.75fr));
+  grid-template-columns: minmax(170px, 1fr) repeat(2, minmax(140px, 0.8fr)) repeat(2, minmax(165px, 0.9fr));
   align-items: center;
   gap: 28px;
   margin: 16px 0;
@@ -1341,7 +1343,7 @@ h1 span {
 .outline-action,
 .full-button {
   border-color: #70c5bd;
-  color: #9edbd4;
+  color: black;
 }
 
 .metric-card,

@@ -26,6 +26,16 @@
         (ngModelChange)="store.setSalary(month, $event)"
         placeholder="Enter salary"
     /></label>
+    <label class="salary-field"
+      >Other income<input
+        class="salary-input"
+        type="number"
+        min="0"
+        inputmode="decimal"
+        [ngModel]="store.otherIncomeFor(month)"
+        (ngModelChange)="store.setOtherIncome(month, $event)"
+        placeholder="Enter other income"
+    /></label>
     <div
       class="balance-result"
       [class.negative]="store.availableBalanceFor(month) < 0"
@@ -38,7 +48,7 @@
           ? "Enter salary to calculate"
           : store.availableBalanceFor(month) < 0
             ? "Planned values exceed salary"
-            : "Available for additional investing or expenses"
+            : "Based on salary + other income"
       }}</small>
     </div>
     <div

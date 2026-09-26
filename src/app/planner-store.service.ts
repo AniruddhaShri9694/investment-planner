@@ -32,6 +32,7 @@ export class PlannerStore {
     this.months[new Date().getMonth()]?.name ?? this.months[0].name;
   private readonly storageKey = 'folio-investment-plan';
   private readonly salaryStorageKey = 'folio-monthly-salary';
+  private readonly otherIncomeStorageKey = 'folio-monthly-other-income';
   readonly activeMonth = signal(this.currentMonth);
   readonly monthPlans = signal<Record<string, InvestmentCategory[]>>(
     this.loadMonthPlans(),
@@ -40,6 +41,7 @@ export class PlannerStore {
     () => this.monthPlans()[this.activeMonth()] ?? [],
   );
   readonly salaries = signal<Record<string, number>>(this.loadSalaries());
+  readonly otherIncomes = signal<Record<string, number>>(this.loadOtherIncomes());
   readonly total = computed(() =>
     this.totalFor(this.activeMonth()),
   );
@@ -159,6 +161,20 @@ export class PlannerStore {
     return {};
   }
 
+  private loadOtherIncomes(): Record<string, number> {
+    if (typeof localStorage === 'undefined') return {};
+    try {
+      const saved = localStorage.getItem(this.otherIncomeStorageKey);
+      if (!saved) return {};
+      const parsed: unknown = JSON.parse(saved);
+      return parsed && typeof parsed === 'object'
+        ? (parsed as Record<string, number>)
+        : {};
+    } catch {
+      return {};
+    }
+  }
+
   categoryTotal(category: InvestmentCategory | undefined): number {
     return (
       category?.items.reduce(
@@ -208,17 +224,23 @@ export class PlannerStore {
   salaryFor(month: string): number {
     return this.salaries()[month] ?? 0;
   }
+  otherIncomeFor(month: string): number {
+    return this.otherIncomes()[month] ?? 0;
+  }
+  totalIncomeFor(month: string): number {
+    return this.salaryFor(month) + this.otherIncomeFor(month);
+  }
   hasSalaryFor(month: string): boolean {
-    return this.salaryFor(month) > 0;
+    return this.totalIncomeFor(month) > 0;
   }
   availableBalanceFor(month: string): number {
     return this.hasSalaryFor(month)
-      ? this.salaryFor(month) - this.totalFor(month)
+      ? this.totalIncomeFor(month) - this.totalFor(month)
       : 0;
   }
   actualBalanceFor(month: string): number {
     return this.hasSalaryFor(month)
-      ? this.salaryFor(month) - this.actualTotalFor(month)
+      ? this.totalIncomeFor(month) - this.actualTotalFor(month)
       : 0;
   }
   setActual(item: InvestmentItem, month: string, value: number | string): void {
@@ -235,12 +257,23 @@ export class PlannerStore {
         JSON.stringify(this.salaries()),
       );
   }
+  setOtherIncome(month: string, value: number | string): void {
+    const income = Math.max(0, Number(value) || 0);
+    this.otherIncomes.update((incomes) => ({ ...incomes, [month]: income }));
+    if (typeof localStorage !== 'undefined')
+      localStorage.setItem(
+        this.otherIncomeStorageKey,
+        JSON.stringify(this.otherIncomes()),
+      );
+  }
   clearPlan(): void {
     this.monthPlans.set({});
     this.salaries.set({});
+    this.otherIncomes.set({});
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(this.storageKey, '{}');
       localStorage.setItem(this.salaryStorageKey, '{}');
+      localStorage.setItem(this.otherIncomeStorageKey, '{}');
     }
   }
   addCategory(): void {
