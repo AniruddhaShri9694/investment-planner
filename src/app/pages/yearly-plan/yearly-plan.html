@@ -47,6 +47,13 @@
           } @else {
             <strong class="not-set-value">Salary not set</strong>
           }
+          @if (store.actualTotalFor(month.name) > 0) {
+            <small class="month-actual-label"
+              >Paid ₹{{
+                store.formatCurrency(store.actualTotalFor(month.name))
+              }}</small
+            >
+          }
           <span class="month-status"
             ><i class="legend-dot"></i> Planned
             <i class="bi bi-arrow-up-right"></i></span

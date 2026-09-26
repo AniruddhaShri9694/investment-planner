@@ -25,3 +25,8 @@ body,
   --blue: #1d6074;
   --yellow: #dba85f;
 }
+
+.negative-value{
+  color: var(--coral) !important;
+  border-color: var(--coral) !important;
+}

@@ -3,6 +3,7 @@ import { computed, Injectable, signal } from '@angular/core';
 export interface InvestmentItem {
   name: string;
   amount: number;
+  actuals?: Record<string, number>;
 }
 export interface InvestmentCategory {
   name: string;
@@ -110,6 +111,26 @@ export class PlannerStore {
       ) ?? 0
     );
   }
+  itemActualFor(item: InvestmentItem, month: string): number {
+    return item.actuals?.[month] ?? 0;
+  }
+  categoryActualTotal(
+    category: InvestmentCategory | undefined,
+    month: string,
+  ): number {
+    return (
+      category?.items.reduce(
+        (sum, item) => sum + this.itemActualFor(item, month),
+        0,
+      ) ?? 0
+    );
+  }
+  actualTotalFor(month: string): number {
+    return this.categories().reduce(
+      (sum, category) => sum + this.categoryActualTotal(category, month),
+      0,
+    );
+  }
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(
       value,
@@ -123,6 +144,16 @@ export class PlannerStore {
   }
   availableBalanceFor(month: string): number {
     return this.hasSalaryFor(month) ? this.salaryFor(month) - this.total() : 0;
+  }
+  actualBalanceFor(month: string): number {
+    return this.hasSalaryFor(month)
+      ? this.salaryFor(month) - this.actualTotalFor(month)
+      : 0;
+  }
+  setActual(item: InvestmentItem, month: string, value: number | string): void {
+    const actual = Math.max(0, Number(value) || 0);
+    item.actuals = { ...item.actuals, [month]: actual };
+    this.refresh();
   }
   setSalary(month: string, value: number | string): void {
     const salary = Math.max(0, Number(value) || 0);

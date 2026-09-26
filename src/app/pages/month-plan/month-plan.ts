@@ -1,11 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PlannerStore } from '../../planner-store.service';
 
 @Component({
   selector: 'app-month-plan',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, NgClass, RouterLink],
   templateUrl: './month-plan.html',
 })
 export class MonthPlan {

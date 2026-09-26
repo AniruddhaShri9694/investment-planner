@@ -672,6 +672,10 @@ h3 {
   width: 180px;
 }
 
+.editable-row .amount-field {
+  width: 150px;
+}
+
 .add-item {
   color: var(--green) !important;
   font: 700 11px Arial;
@@ -883,6 +887,12 @@ h3 {
   font: 400 20px Georgia;
 }
 
+.category-actual-total {
+  color: #9edbd4;
+  font: 11px Arial;
+  white-space: nowrap;
+}
+
 .add-item {
   border: 0;
   background: transparent;
@@ -933,6 +943,25 @@ h3 {
   font: 400 20px Georgia;
 }
 
+.category-totals {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.category-totals span,
+.item-value {
+  display: grid;
+  gap: 5px;
+  color: #9cc3c8;
+  font: 10px Arial;
+}
+
+.category-totals strong {
+  color: #d9f0ee;
+  font: 400 17px Georgia;
+}
+
 .read-only-items {
   margin-top: 8px;
 }
@@ -951,9 +980,37 @@ h3 {
   border-bottom: 0;
 }
 
+.read-only-items .read-only-item-row {
+  align-items: center;
+}
+
+.read-only-items .item-values {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0;
+  border: 0;
+}
+
+.read-only-items .item-value {
+  padding: 0;
+  border: 0;
+  white-space: nowrap;
+}
+
 .read-only-items strong {
   color: #d9f0ee;
   font-weight: 700;
+}
+
+.read-only-items .item-value strong {
+  font: 700 12px Arial;
+}
+
+.actual-input {
+  min-height: 34px;
+  padding: 6px 8px;
+  font: 13px Arial;
 }
 
 .empty-category {
@@ -1073,13 +1130,43 @@ h3 {
 
 .month-income {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 220px minmax(230px, 0.8fr);
+  grid-template-columns: minmax(0, 1fr) 200px repeat(2, minmax(170px, 0.75fr));
   align-items: center;
   gap: 28px;
   margin: 16px 0;
 }
 .month-income h2 {
   color: #d9f0ee;
+}
+
+.actual-balance {
+  border-left-color: #dba85f;
+}
+
+.month-actual-label {
+  display: block;
+  margin-top: 4px;
+  color: #9edbd4;
+  font: 10px Arial;
+}
+
+@media (max-width: 520px) {
+  .editable-row .amount-field {
+    flex: 1;
+    width: auto;
+  }
+
+  .read-only-items .read-only-item-row {
+    align-items: stretch;
+  }
+
+  .read-only-items .item-values {
+    justify-content: space-between;
+  }
+
+  .category-totals {
+    gap: 10px;
+  }
 }
 
 @media (max-width: 850px) {

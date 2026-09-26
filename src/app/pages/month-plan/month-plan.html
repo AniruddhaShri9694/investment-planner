@@ -4,8 +4,7 @@
       <p class="eyebrow">Monthly plan <span>•</span> {{ store.currentYear }}</p>
       <h1>{{ month }} <span>detail</span></h1>
       <p class="heading-copy">
-        Tune categories and amounts for this month. Totals recalculate as you
-        work.
+        Review your budget and record what you actually paid for each item.
       </p>
     </div>
     <a class="outline-action" routerLink="/yearly-plan"
@@ -41,6 +40,16 @@
             ? "Planned values exceed salary"
             : "Available for additional investing or expenses"
       }}</small>
+    </div>
+    <div
+      class="balance-result actual-balance"
+      [class.negative]="store.actualBalanceFor(month) < 0"
+    >
+      <span>After actual spending</span
+      ><strong>₹{{ store.formatCurrency(store.actualBalanceFor(month)) }}</strong
+      ><small
+        >₹{{ store.formatCurrency(store.actualTotalFor(month)) }} paid so far</small
+      >
     </div>
   </section>
   <section class="detail-section detail-page">
@@ -79,6 +88,12 @@
                 >₹{{
                   store.formatCurrency(store.categoryTotal(category))
                 }}</strong
+              ><span class="category-actual-total"
+                >₹{{
+                  store.formatCurrency(
+                    store.categoryActualTotal(category, month)
+                  )
+                }} paid</span
               ><button
                 class="icon-button"
                 title="Remove category"
@@ -97,11 +112,24 @@
                       [(ngModel)]="item.name"
                       (ngModelChange)="store.refresh()" /></label
                   ><label class="amount-field"
-                    >Amount<input
+                    >Amount
+                    <input
                       class="edit-input"
                       type="number"
+                      min="0"
+                      step="0.01"
                       [(ngModel)]="item.amount"
                       (ngModelChange)="store.refresh()" /></label
+                  ><label class="amount-field"
+                    >Actual paid
+                    <input
+                      class="edit-input"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      [ngClass]="{ 'negative-value': item.amount < store.itemActualFor(item, month) }"
+                      [ngModel]="store.itemActualFor(item, month)"
+                      (ngModelChange)="store.setActual(item, month, $event)" /></label
                   ><button
                     class="icon-button"
                     title="Remove item"
@@ -153,21 +181,50 @@
                   <span class="category-label">Category</span>
                   <h3>{{ category.name || "Untitled category" }}</h3>
                 </div>
-                <strong
-                  >₹{{
-                    store.formatCurrency(store.categoryTotal(category))
-                  }}</strong
-                >
+                <div class="category-totals">
+                  <span
+                    >Budget<strong
+                      >₹{{ store.formatCurrency(store.categoryTotal(category))
+                      }}</strong
+                    ></span
+                  >
+                  <span
+                    >Paid<strong
+                      >₹{{ store.formatCurrency(
+                        store.categoryActualTotal(category, month)
+                      ) }}</strong
+                    ></span
+                  >
+                </div>
               </div>
               <div class="read-only-items">
                 @for (item of category.items; track $index) {
-                  <div>
+                  <div class="read-only-item-row">
                     <span>{{
                       item.name ||
                         "Untitled
               item"
-                    }}</span
-                    ><strong>₹{{ store.formatCurrency(item.amount) }}</strong>
+                    }}</span>
+                    <div class="item-values">
+                      <span class="item-value">
+                        <small>Budget</small>
+                        <strong>₹{{ store.formatCurrency(item.amount) }}</strong>
+                      </span>
+                      <label class="item-value actual-value">
+                        <small>Actual paid</small>
+                        <input
+                          class="edit-input actual-input"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          [attr.aria-label]="'Actual paid for ' + item.name"
+                          [ngModel]="store.itemActualFor(item, month)"
+                          (ngModelChange)="store.setActual(item, month, $event)"
+                              
+                          [ngClass]="{ 'negative-value': item.amount < store.itemActualFor(item, month) }"
+                        />
+                      </label>
+                    </div>
                   </div>
                 }
                 @if (!category.items.length) {
