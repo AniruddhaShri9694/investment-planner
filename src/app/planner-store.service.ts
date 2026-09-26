@@ -33,6 +33,7 @@ export class PlannerStore {
   private readonly storageKey = 'folio-investment-plan';
   private readonly salaryStorageKey = 'folio-monthly-salary';
   private readonly otherIncomeStorageKey = 'folio-monthly-other-income';
+  private readonly updatedAtStorageKey = 'folio-month-plan-updated-at';
   readonly activeMonth = signal(this.currentMonth);
   readonly monthPlans = signal<Record<string, InvestmentCategory[]>>(
     this.loadMonthPlans(),
@@ -42,6 +43,9 @@ export class PlannerStore {
   );
   readonly salaries = signal<Record<string, number>>(this.loadSalaries());
   readonly otherIncomes = signal<Record<string, number>>(this.loadOtherIncomes());
+  readonly lastPlanUpdatedAt = signal<string | undefined>(
+    this.loadLastPlanUpdatedAt(),
+  );
   readonly total = computed(() =>
     this.totalFor(this.activeMonth()),
   );
@@ -175,6 +179,25 @@ export class PlannerStore {
     }
   }
 
+  private loadLastPlanUpdatedAt(): string | undefined {
+    if (typeof localStorage === 'undefined') return undefined;
+    try {
+      const saved = localStorage.getItem(this.updatedAtStorageKey);
+      if (!saved) return undefined;
+      const parsed: unknown = JSON.parse(saved);
+      if (typeof parsed === 'string') return parsed;
+      if (parsed && typeof parsed === 'object') {
+        return Object.values(parsed as Record<string, string>)
+          .filter((value) => !Number.isNaN(new Date(value).getTime()))
+          .sort()
+          .at(-1);
+      }
+      return undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
   categoryTotal(category: InvestmentCategory | undefined): number {
     return (
       category?.items.reduce(
@@ -216,6 +239,15 @@ export class PlannerStore {
       0,
     );
   }
+  formatUpdatedDate(value: string): string {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? 'Date unavailable'
+      : new Intl.DateTimeFormat('en-IN', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        }).format(date);
+  }
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(
       value,
@@ -256,6 +288,7 @@ export class PlannerStore {
         this.salaryStorageKey,
         JSON.stringify(this.salaries()),
       );
+    this.markLastUpdated();
   }
   setOtherIncome(month: string, value: number | string): void {
     const income = Math.max(0, Number(value) || 0);
@@ -265,15 +298,18 @@ export class PlannerStore {
         this.otherIncomeStorageKey,
         JSON.stringify(this.otherIncomes()),
       );
+    this.markLastUpdated();
   }
   clearPlan(): void {
     this.monthPlans.set({});
     this.salaries.set({});
     this.otherIncomes.set({});
+    this.lastPlanUpdatedAt.set(undefined);
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(this.storageKey, '{}');
       localStorage.setItem(this.salaryStorageKey, '{}');
       localStorage.setItem(this.otherIncomeStorageKey, '{}');
+      localStorage.setItem(this.updatedAtStorageKey, '{}');
     }
   }
   addCategory(): void {
@@ -283,7 +319,7 @@ export class PlannerStore {
       ...plans,
       [month]: [...categories, { name: '', color: 'blue', items: [] }],
     }));
-    this.persist();
+    this.persist(true);
   }
   removeCategory(category: InvestmentCategory): void {
     const month = this.activeMonth();
@@ -291,7 +327,7 @@ export class PlannerStore {
       ...plans,
       [month]: (plans[month] ?? []).filter((item) => item !== category),
     }));
-    this.persist();
+    this.persist(true);
   }
   addItem(category: InvestmentCategory): void {
     category.items.push({ name: '', amount: 0 });
@@ -307,10 +343,19 @@ export class PlannerStore {
       ...plans,
       [month]: [...(plans[month] ?? [])],
     }));
-    this.persist();
+    this.persist(true);
   }
-  private persist(): void {
-    if (typeof localStorage !== 'undefined')
+  private persist(markUpdated = false): void {
+    if (markUpdated) this.markLastUpdated();
+    if (typeof localStorage !== 'undefined') {
       localStorage.setItem(this.storageKey, JSON.stringify(this.monthPlans()));
+    }
+  }
+
+  private markLastUpdated(): void {
+    const timestamp = new Date().toISOString();
+    this.lastPlanUpdatedAt.set(timestamp);
+    if (typeof localStorage !== 'undefined')
+      localStorage.setItem(this.updatedAtStorageKey, JSON.stringify(timestamp));
   }
 }

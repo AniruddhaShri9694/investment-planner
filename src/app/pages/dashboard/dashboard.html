@@ -74,4 +74,28 @@
       ></a>
     </article>
   </section>
+  <section class="panel update-panel">
+    <div class="panel-heading">
+      <div>
+        <p class="eyebrow">Plan activity</p>
+        <h2>Last updated</h2>
+      </div>
+      <i class="bi bi-clock-history panel-symbol"></i>
+    </div>
+    <p class="panel-copy">
+      Most recent change to the app's budget, income, category, or item data.
+    </p>
+    @if (store.lastPlanUpdatedAt()) {
+      <div class="last-update-value">
+        <i class="bi bi-clock-history"></i>
+        <time [attr.datetime]="store.lastPlanUpdatedAt()">
+          {{ store.formatUpdatedDate(store.lastPlanUpdatedAt() ?? "") }}
+        </time>
+      </div>
+    } @else {
+      <p class="update-empty">
+        No app data changes have been recorded yet.
+      </p>
+    }
+  </section>
 </main>
