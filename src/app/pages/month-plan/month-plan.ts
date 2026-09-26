@@ -16,6 +16,10 @@ export class MonthPlan {
     this.store.currentMonth;
   protected readonly editing = signal(false);
 
+  constructor() {
+    this.store.setActiveMonth(this.month);
+  }
+
   protected startEditing(): void {
     this.editing.set(true);
   }

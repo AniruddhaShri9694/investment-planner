@@ -32,40 +32,96 @@ export class PlannerStore {
     this.months[new Date().getMonth()]?.name ?? this.months[0].name;
   private readonly storageKey = 'folio-investment-plan';
   private readonly salaryStorageKey = 'folio-monthly-salary';
-  readonly categories = signal<InvestmentCategory[]>(this.loadCategories());
+  readonly activeMonth = signal(this.currentMonth);
+  readonly monthPlans = signal<Record<string, InvestmentCategory[]>>(
+    this.loadMonthPlans(),
+  );
+  readonly categories = computed(
+    () => this.monthPlans()[this.activeMonth()] ?? [],
+  );
   readonly salaries = signal<Record<string, number>>(this.loadSalaries());
   readonly total = computed(() =>
-    this.categories().reduce(
-      (sum, category) => sum + this.categoryTotal(category),
-      0,
-    ),
+    this.totalFor(this.activeMonth()),
   );
   readonly investmentTotal = computed(() =>
-    this.categoryTotal(
-      this.categories().find(
-        (category) => category.name === 'Investment & Savings',
-      ),
-    ),
+    this.investmentTotalFor(this.activeMonth()),
   );
   readonly commitments = computed(() => this.total() - this.investmentTotal());
   readonly itemCount = computed(() =>
     this.categories().reduce((sum, category) => sum + category.items.length, 0),
   );
 
-  private loadCategories(): InvestmentCategory[] {
-    if (typeof localStorage === 'undefined') return [];
+  private loadMonthPlans(): Record<string, InvestmentCategory[]> {
+    const defaultPlans: Record<string, InvestmentCategory[]> = {
+      January: this.screenshotPlan(),
+    };
+    if (typeof localStorage === 'undefined') return defaultPlans;
     try {
       localStorage.removeItem('undefined');
       const saved = localStorage.getItem(this.storageKey);
-      if (saved) return JSON.parse(saved) as InvestmentCategory[];
-      const initialPlan = this.screenshotPlan();
-      localStorage.setItem(this.storageKey, JSON.stringify(initialPlan));
-      return initialPlan;
+      if (saved) {
+        const parsed: unknown = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Migrate the old shared plan to independent monthly copies.
+          const legacy = parsed as InvestmentCategory[];
+          const migrated: Record<string, InvestmentCategory[]> = {};
+          for (const month of this.months) {
+            migrated[month.name] = this.clonePlan(legacy, month.name, true);
+          }
+          localStorage.setItem(this.storageKey, JSON.stringify(migrated));
+          return migrated;
+        }
+        if (parsed && typeof parsed === 'object') {
+          return parsed as Record<string, InvestmentCategory[]>;
+        }
+      }
+      localStorage.setItem(this.storageKey, JSON.stringify(defaultPlans));
+      return defaultPlans;
     } catch {
-      const initialPlan = this.screenshotPlan();
-      localStorage.setItem(this.storageKey, JSON.stringify(initialPlan));
-      return initialPlan;
+      localStorage.setItem(this.storageKey, JSON.stringify(defaultPlans));
+      return defaultPlans;
     }
+  }
+
+  private clonePlan(
+    categories: InvestmentCategory[],
+    month: string,
+    preserveActual = false,
+  ): InvestmentCategory[] {
+    return categories.map((category) => ({
+      ...category,
+      items: category.items.map((item) => ({
+        ...item,
+        actuals:
+          preserveActual && item.actuals?.[month] !== undefined
+            ? { [month]: item.actuals[month] }
+            : {},
+      })),
+    }));
+  }
+
+  setActiveMonth(month: string): void {
+    this.activeMonth.set(month);
+    this.ensureMonthPlan(month);
+  }
+
+  private ensureMonthPlan(month: string): InvestmentCategory[] {
+    const plans = this.monthPlans();
+    if (plans[month]) return plans[month];
+
+    const monthIndex = this.months.findIndex((entry) => entry.name === month);
+    let source: InvestmentCategory[] | undefined;
+    for (let index = monthIndex - 1; index >= 0; index--) {
+      const previousPlan = plans[this.months[index].name];
+      if (previousPlan) {
+        source = previousPlan;
+        break;
+      }
+    }
+    const copiedPlan = this.clonePlan(source ?? [], month);
+    this.monthPlans.update((current) => ({ ...current, [month]: copiedPlan }));
+    this.persist();
+    return copiedPlan;
   }
 
   private screenshotPlan(): InvestmentCategory[] {
@@ -111,6 +167,19 @@ export class PlannerStore {
       ) ?? 0
     );
   }
+  totalFor(month: string): number {
+    return (this.monthPlans()[month] ?? []).reduce(
+      (sum, category) => sum + this.categoryTotal(category),
+      0,
+    );
+  }
+  investmentTotalFor(month: string): number {
+    return this.categoryTotal(
+      this.monthPlans()[month]?.find(
+        (category) => category.name === 'Investment & Savings',
+      ),
+    );
+  }
   itemActualFor(item: InvestmentItem, month: string): number {
     return item.actuals?.[month] ?? 0;
   }
@@ -126,7 +195,7 @@ export class PlannerStore {
     );
   }
   actualTotalFor(month: string): number {
-    return this.categories().reduce(
+    return (this.monthPlans()[month] ?? []).reduce(
       (sum, category) => sum + this.categoryActualTotal(category, month),
       0,
     );
@@ -143,7 +212,9 @@ export class PlannerStore {
     return this.salaryFor(month) > 0;
   }
   availableBalanceFor(month: string): number {
-    return this.hasSalaryFor(month) ? this.salaryFor(month) - this.total() : 0;
+    return this.hasSalaryFor(month)
+      ? this.salaryFor(month) - this.totalFor(month)
+      : 0;
   }
   actualBalanceFor(month: string): number {
     return this.hasSalaryFor(month)
@@ -165,24 +236,28 @@ export class PlannerStore {
       );
   }
   clearPlan(): void {
-    this.categories.set([]);
+    this.monthPlans.set({});
     this.salaries.set({});
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(this.storageKey, '[]');
+      localStorage.setItem(this.storageKey, '{}');
       localStorage.setItem(this.salaryStorageKey, '{}');
     }
   }
   addCategory(): void {
-    this.categories.update((items) => [
-      ...items,
-      { name: '', color: 'blue', items: [] },
-    ]);
+    const month = this.activeMonth();
+    const categories = this.ensureMonthPlan(month);
+    this.monthPlans.update((plans) => ({
+      ...plans,
+      [month]: [...categories, { name: '', color: 'blue', items: [] }],
+    }));
     this.persist();
   }
   removeCategory(category: InvestmentCategory): void {
-    this.categories.update((items) =>
-      items.filter((item) => item !== category),
-    );
+    const month = this.activeMonth();
+    this.monthPlans.update((plans) => ({
+      ...plans,
+      [month]: (plans[month] ?? []).filter((item) => item !== category),
+    }));
     this.persist();
   }
   addItem(category: InvestmentCategory): void {
@@ -194,11 +269,15 @@ export class PlannerStore {
     this.refresh();
   }
   refresh(): void {
-    this.categories.update((items) => [...items]);
+    const month = this.activeMonth();
+    this.monthPlans.update((plans) => ({
+      ...plans,
+      [month]: [...(plans[month] ?? [])],
+    }));
     this.persist();
   }
   private persist(): void {
     if (typeof localStorage !== 'undefined')
-      localStorage.setItem(this.storageKey, JSON.stringify(this.categories()));
+      localStorage.setItem(this.storageKey, JSON.stringify(this.monthPlans()));
   }
 }
