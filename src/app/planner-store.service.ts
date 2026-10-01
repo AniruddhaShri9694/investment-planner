@@ -39,6 +39,7 @@ export class PlannerStore {
   private readonly ownerStorageKey = 'folio-planner-owner';
   private readonly salaryStorageKey = 'folio-monthly-salary';
   private readonly otherIncomeStorageKey = 'folio-monthly-other-income';
+  private readonly arrearsStorageKey = 'folio-monthly-arrears';
   private readonly updatedAtStorageKey = 'folio-month-plan-updated-at';
   readonly activeMonth = signal(this.currentMonth);
   readonly monthPlans = signal<Record<string, InvestmentCategory[]>>(
@@ -49,6 +50,7 @@ export class PlannerStore {
   );
   readonly salaries = signal<Record<string, number>>(this.loadSalaries());
   readonly otherIncomes = signal<Record<string, number>>(this.loadOtherIncomes());
+  readonly arrears = signal<Record<string, number>>(this.loadArrears());
   readonly lastPlanUpdatedAt = signal<string | undefined>(
     this.loadLastPlanUpdatedAt(),
   );
@@ -192,6 +194,20 @@ export class PlannerStore {
     }
   }
 
+  private loadArrears(): Record<string, number> {
+    if (typeof localStorage === 'undefined') return {};
+    try {
+      const saved = localStorage.getItem(this.arrearsStorageKey);
+      if (!saved) return {};
+      const parsed: unknown = JSON.parse(saved);
+      return parsed && typeof parsed === 'object'
+        ? (parsed as Record<string, number>)
+        : {};
+    } catch {
+      return {};
+    }
+  }
+
   private loadLastPlanUpdatedAt(): string | undefined {
     if (typeof localStorage === 'undefined') return undefined;
     try {
@@ -229,13 +245,14 @@ export class PlannerStore {
         planner = await this.api.createPlanner(
           canMigrateLocal
             ? this.toPayload()
-            : { monthPlans: {}, salaries: {}, otherIncomes: {} },
+            : { monthPlans: {}, salaries: {}, otherIncomes: {}, arrears: {} },
         );
         this.hasRemotePlanner = true;
       }
+      const backendSupportsArrears = this.hasArrearsField(planner);
       this.applyPlanner(planner);
       this.persistLocal();
-      this.syncStatus.set('synced');
+      this.syncStatus.set(backendSupportsArrears ? 'synced' : 'error');
     } catch (error) {
       this.syncStatus.set('error');
       throw error;
@@ -272,7 +289,12 @@ export class PlannerStore {
     this.monthPlans.set(plans);
     this.salaries.set(planner.salaries ?? {});
     this.otherIncomes.set(planner.otherIncomes ?? {});
+    this.arrears.set(planner.arrears ?? this.arrears());
     this.lastPlanUpdatedAt.set(planner.lastUpdatedUtc);
+  }
+
+  private hasArrearsField(planner: PlannerPayload): boolean {
+    return Object.hasOwn(planner, 'arrears');
   }
 
   private toPayload(): PlannerPayload {
@@ -299,6 +321,7 @@ export class PlannerStore {
       monthPlans,
       salaries: this.salaries(),
       otherIncomes: this.otherIncomes(),
+      arrears: this.arrears(),
     };
   }
 
@@ -316,6 +339,10 @@ export class PlannerStore {
               ? await this.api.updatePlanner(payload)
               : await this.api.createPlanner(payload);
             this.hasRemotePlanner = true;
+            if (!this.hasArrearsField(updated)) {
+              this.syncStatus.set('error');
+              return;
+            }
             this.lastPlanUpdatedAt.set(updated.lastUpdatedUtc);
             this.syncStatus.set('synced');
           } catch {
@@ -386,19 +413,26 @@ export class PlannerStore {
   otherIncomeFor(month: string): number {
     return this.otherIncomes()[month] ?? 0;
   }
-  totalIncomeFor(month: string): number {
-    return this.salaryFor(month) + this.otherIncomeFor(month);
+  arrearsFor(month: string): number {
+    return this.arrears()[month] ?? 0;
   }
-  hasSalaryFor(month: string): boolean {
+  totalIncomeFor(month: string): number {
+    return (
+      this.salaryFor(month) +
+      this.otherIncomeFor(month) +
+      this.arrearsFor(month)
+    );
+  }
+  hasIncomeFor(month: string): boolean {
     return this.totalIncomeFor(month) > 0;
   }
   availableBalanceFor(month: string): number {
-    return this.hasSalaryFor(month)
+    return this.hasIncomeFor(month)
       ? this.totalIncomeFor(month) - this.totalFor(month)
       : 0;
   }
   actualBalanceFor(month: string): number {
-    return this.hasSalaryFor(month)
+    return this.hasIncomeFor(month)
       ? this.totalIncomeFor(month) - this.actualTotalFor(month)
       : 0;
   }
@@ -431,15 +465,29 @@ export class PlannerStore {
     this.persistLocal();
     this.scheduleBackendSave();
   }
+  setArrears(month: string, value: number | string): void {
+    const amount = Math.max(0, Number(value) || 0);
+    this.arrears.update((arrears) => ({ ...arrears, [month]: amount }));
+    if (typeof localStorage !== 'undefined')
+      localStorage.setItem(
+        this.arrearsStorageKey,
+        JSON.stringify(this.arrears()),
+      );
+    this.markLastUpdated();
+    this.persistLocal();
+    this.scheduleBackendSave();
+  }
   clearPlan(): void {
     this.monthPlans.set({});
     this.salaries.set({});
     this.otherIncomes.set({});
+    this.arrears.set({});
     this.lastPlanUpdatedAt.set(undefined);
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(this.storageKey, '{}');
       localStorage.setItem(this.salaryStorageKey, '{}');
       localStorage.setItem(this.otherIncomeStorageKey, '{}');
+      localStorage.setItem(this.arrearsStorageKey, '{}');
       localStorage.setItem(this.updatedAtStorageKey, '{}');
     }
     this.scheduleBackendSave();
@@ -488,6 +536,7 @@ export class PlannerStore {
       localStorage.setItem(this.storageKey, JSON.stringify(this.monthPlans()));
       localStorage.setItem(this.salaryStorageKey, JSON.stringify(this.salaries()));
       localStorage.setItem(this.otherIncomeStorageKey, JSON.stringify(this.otherIncomes()));
+      localStorage.setItem(this.arrearsStorageKey, JSON.stringify(this.arrears()));
       localStorage.setItem(
         this.updatedAtStorageKey,
         JSON.stringify(this.lastPlanUpdatedAt()),

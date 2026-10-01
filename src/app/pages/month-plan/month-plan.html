@@ -13,9 +13,19 @@
   </section>
   <section class="month-income panel">
     <div>
-      <p class="eyebrow">{{ month }} salary planning</p>
-      <h2>Salary and available balance</h2>
+      <p class="eyebrow">{{ month }} income planning</p>
+      <h2>Income and available balance</h2>
     </div>
+    <label class="salary-field"
+      >Opening balance<input
+        class="salary-input"
+        type="number"
+        min="0"
+        inputmode="decimal"
+        [ngModel]="store.arrearsFor(month)"
+        (ngModelChange)="store.setArrears(month, $event)"
+        placeholder="Enter opening balance"
+    /></label>
     <label class="salary-field"
       >{{ month }} salary<input
         class="salary-input"
@@ -44,11 +54,11 @@
       ><strong
         >₹{{ store.formatCurrency(store.availableBalanceFor(month)) }}</strong
       ><small>{{
-        !store.hasSalaryFor(month)
-          ? "Enter salary to calculate"
+        !store.hasIncomeFor(month)
+          ? "Enter income to calculate"
           : store.availableBalanceFor(month) < 0
-            ? "Planned values exceed salary"
-            : "Based on salary + other income"
+            ? "Planned values exceed income"
+            : "Based on salary + other income + arrears"
       }}</small>
     </div>
     <div

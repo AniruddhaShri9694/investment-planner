@@ -21,6 +21,7 @@ export interface PlannerPayload {
   >;
   salaries: Record<string, number>;
   otherIncomes: Record<string, number>;
+  arrears: Record<string, number>;
   lastUpdatedUtc?: string;
 }
 

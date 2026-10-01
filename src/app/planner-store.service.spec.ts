@@ -33,7 +33,10 @@ describe('PlannerStore monthly plans', () => {
     store = TestBed.inject(PlannerStore);
   });
 
-  afterEach(() => localStorage.removeItem('folio-investment-plan'));
+  afterEach(() => {
+    localStorage.removeItem('folio-investment-plan');
+    localStorage.removeItem('folio-monthly-arrears');
+  });
 
   it('copies January into a blank February without sharing item objects', () => {
     store.setActiveMonth('February');
@@ -48,5 +51,16 @@ describe('PlannerStore monthly plans', () => {
     expect(store.categories()[0].items[0]).not.toBe(
       store.monthPlans()['January'][0].items[0],
     );
+  });
+
+  it('includes arrears in income balances and persists the monthly amount', () => {
+    store.setActiveMonth('February');
+    store.setArrears('February', 2000);
+
+    expect(store.totalIncomeFor('February')).toBe(2000);
+    expect(store.availableBalanceFor('February')).toBe(500);
+    expect(JSON.parse(localStorage.getItem('folio-monthly-arrears')!)).toEqual({
+      February: 2000,
+    });
   });
 });

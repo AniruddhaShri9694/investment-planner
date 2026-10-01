@@ -29,14 +29,14 @@
         @for (month of store.months; track month.name) {
           <a class="month-tile" [routerLink]="['/month', month.name]"
             ><span>{{ month.short }}</span>
-            @if (store.hasSalaryFor(month.name)) {
+            @if (store.hasIncomeFor(month.name)) {
               <strong
                 >₹{{
                   store.formatCurrency(store.availableBalanceFor(month.name))
                 }}</strong
               ><small class="month-value-label">Available</small>
             } @else {
-              <strong class="not-set-value">Salary not set</strong>
+              <strong class="not-set-value">Income not set</strong>
             }
             @if (store.actualTotalFor(month.name) > 0) {
               <small class="month-actual-label"
