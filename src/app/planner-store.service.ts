@@ -407,6 +407,9 @@ export class PlannerStore {
       value,
     );
   }
+  limitAmount(value: number | string): number {
+    return Math.min(9_999_999, Math.max(0, Number(value) || 0));
+  }
   salaryFor(month: string): number {
     return this.salaries()[month] ?? 0;
   }
@@ -437,12 +440,16 @@ export class PlannerStore {
       : 0;
   }
   setActual(item: InvestmentItem, month: string, value: number | string): void {
-    const actual = Math.max(0, Number(value) || 0);
+    const actual = this.limitAmount(value);
     item.actuals = { ...item.actuals, [month]: actual };
     this.refresh();
   }
+  setBudgetAmount(item: InvestmentItem, value: number | string): void {
+    item.amount = this.limitAmount(value);
+    this.refresh();
+  }
   setSalary(month: string, value: number | string): void {
-    const salary = Math.max(0, Number(value) || 0);
+    const salary = this.limitAmount(value);
     this.salaries.update((salaries) => ({ ...salaries, [month]: salary }));
     if (typeof localStorage !== 'undefined')
       localStorage.setItem(
@@ -454,7 +461,7 @@ export class PlannerStore {
     this.scheduleBackendSave();
   }
   setOtherIncome(month: string, value: number | string): void {
-    const income = Math.max(0, Number(value) || 0);
+    const income = this.limitAmount(value);
     this.otherIncomes.update((incomes) => ({ ...incomes, [month]: income }));
     if (typeof localStorage !== 'undefined')
       localStorage.setItem(
@@ -466,7 +473,7 @@ export class PlannerStore {
     this.scheduleBackendSave();
   }
   setArrears(month: string, value: number | string): void {
-    const amount = Math.max(0, Number(value) || 0);
+    const amount = this.limitAmount(value);
     this.arrears.update((arrears) => ({ ...arrears, [month]: amount }));
     if (typeof localStorage !== 'undefined')
       localStorage.setItem(

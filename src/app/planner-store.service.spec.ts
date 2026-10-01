@@ -63,4 +63,12 @@ describe('PlannerStore monthly plans', () => {
       February: 2000,
     });
   });
+
+  it('limits manually entered amounts to seven digits', () => {
+    store.setArrears('February', 12345678);
+    store.setSalary('February', '12345678');
+
+    expect(store.arrearsFor('February')).toBe(9999999);
+    expect(store.salaryFor('February')).toBe(9999999);
+  });
 });

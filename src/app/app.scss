@@ -663,6 +663,7 @@ h3 {
   display: grid;
   gap: 12px;
   margin-top: 26px;
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
 .editable-category {
@@ -941,14 +942,20 @@ h3 {
 
 .read-only-categories {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 15px;
   margin-top: 28px;
 }
 
+@media (max-width: 1200px) {
+  .read-only-categories, .editable-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 @media (max-width: 700px) {
-  .read-only-categories {
-    grid-template-columns: minmax(0, 1fr);
+  .read-only-categories, .editable-list {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1213,7 +1220,7 @@ h3 {
   }
 }
 
-@media (max-width: 850px) {
+@media (max-width: 1200px) {
   .month-income {
     grid-template-columns: 1fr 1fr;
   }

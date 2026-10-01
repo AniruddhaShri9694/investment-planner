@@ -19,9 +19,11 @@
     <label class="salary-field"
       >Opening balance<input
         class="salary-input"
-        type="number"
-        min="0"
+        type="text"
+        maxlength="10"
         inputmode="decimal"
+        (beforeinput)="limitAmountInput($event)"
+        (paste)="limitAmountPaste($event)"
         [ngModel]="store.arrearsFor(month)"
         (ngModelChange)="store.setArrears(month, $event)"
         placeholder="Enter opening balance"
@@ -29,9 +31,11 @@
     <label class="salary-field"
       >{{ month }} salary<input
         class="salary-input"
-        type="number"
-        min="0"
+        type="text"
+        maxlength="10"
         inputmode="decimal"
+        (beforeinput)="limitAmountInput($event)"
+        (paste)="limitAmountPaste($event)"
         [ngModel]="store.salaryFor(month)"
         (ngModelChange)="store.setSalary(month, $event)"
         placeholder="Enter salary"
@@ -39,9 +43,11 @@
     <label class="salary-field"
       >Other income<input
         class="salary-input"
-        type="number"
-        min="0"
+        type="text"
+        maxlength="10"
         inputmode="decimal"
+        (beforeinput)="limitAmountInput($event)"
+        (paste)="limitAmountPaste($event)"
         [ngModel]="store.otherIncomeFor(month)"
         (ngModelChange)="store.setOtherIncome(month, $event)"
         placeholder="Enter other income"
@@ -135,18 +141,22 @@
                     >Amount
                     <input
                       class="edit-input"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      [(ngModel)]="item.amount"
-                      (ngModelChange)="store.refresh()" /></label
+                      type="text"
+                      maxlength="10"
+                      inputmode="decimal"
+                      (beforeinput)="limitAmountInput($event)"
+                      (paste)="limitAmountPaste($event)"
+                      [ngModel]="item.amount"
+                      (ngModelChange)="store.setBudgetAmount(item, $event)" /></label
                   ><label class="amount-field"
                     >Actual paid
                     <input
                       class="edit-input"
-                      type="number"
-                      min="0"
-                      step="0.01"
+                      type="text"
+                      maxlength="10"
+                      inputmode="decimal"
+                      (beforeinput)="limitAmountInput($event)"
+                      (paste)="limitAmountPaste($event)"
                       [ngClass]="{ 'negative-value': item.amount < store.itemActualFor(item, month) }"
                       [ngModel]="store.itemActualFor(item, month)"
                       (ngModelChange)="store.setActual(item, month, $event)" /></label
@@ -184,9 +194,6 @@
         <div>
           <p class="eyebrow">Saved plan</p>
           <h2>Categories and items</h2>
-          <p class="panel-copy">
-            Your stored {{ month }} plan, ready to review.
-          </p>
         </div>
         <button class="primary-action" type="button" (click)="startEditing()">
           <i class="bi bi-pencil"></i> Edit plan
@@ -234,9 +241,11 @@
                         <small>Actual paid</small>
                         <input
                           class="edit-input actual-input"
-                          type="number"
-                          min="0"
-                          step="0.01"
+                          type="text"
+                          maxlength="10"
+                          inputmode="decimal"
+                          (beforeinput)="limitAmountInput($event)"
+                          (paste)="limitAmountPaste($event)"
                           [attr.aria-label]="'Actual paid for ' + item.name"
                           [ngModel]="store.itemActualFor(item, month)"
                           (ngModelChange)="store.setActual(item, month, $event)"

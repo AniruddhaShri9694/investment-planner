@@ -27,4 +27,34 @@ export class MonthPlan {
     this.store.refresh();
     this.editing.set(false);
   }
+
+  protected limitAmountInput(event: InputEvent): void {
+    if (event.inputType.startsWith('delete')) return;
+
+    const input = event.target as HTMLInputElement;
+    const inserted = event.data ?? event.dataTransfer?.getData('text/plain');
+    if (inserted === null || inserted === undefined) return;
+
+    if (!this.canInsertAmount(input, inserted)) event.preventDefault();
+  }
+
+  protected limitAmountPaste(event: ClipboardEvent): void {
+    const input = event.target as HTMLInputElement;
+    const inserted = event.clipboardData?.getData('text/plain') ?? '';
+    if (!this.canInsertAmount(input, inserted)) event.preventDefault();
+  }
+
+  private canInsertAmount(input: HTMLInputElement, inserted: string): boolean {
+    if (!/^[\d.]*$/.test(inserted)) return false;
+
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? start;
+    const candidate =
+      input.value.slice(0, start) + inserted + input.value.slice(end);
+
+    return (
+      (candidate.match(/\d/g)?.length ?? 0) <= 7 &&
+      (candidate.match(/\./g)?.length ?? 0) <= 1
+    );
+  }
 }
