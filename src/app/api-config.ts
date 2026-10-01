@@ -1,0 +1,1 @@
+export const API_BASE_URL = 'https://investmentplanner-fwcykwgo7-anishrimawalegmailcoms-projects.vercel.app/api';

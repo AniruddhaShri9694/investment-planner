@@ -58,7 +58,7 @@ vercel
 
 The configured output directory is `dist/investment-planner/browser`.
 
-The planner currently stores entered data in browser `localStorage`. A backend is required to synchronize data between different browsers or devices.
+The planner keeps a local browser cache and synchronizes authenticated data with the API at `https://localhost:7284/api`. Use the profile menu to sign in or create an account. The backend must be running with CORS enabled for the Angular development origin (`http://localhost:4200`); new accounts create their planner on first sign-in.
 
 ## Running unit tests
 

@@ -1,48 +1,59 @@
-<header class="topbar">
-  <a class="brand" routerLink="/dashboard"
-    ><span class="brand-mark">F</span><span>Folio</span></a
-  >
-  <nav class="topnav" aria-label="Primary navigation">
-    <a
-      routerLink="/dashboard"
-      routerLinkActive="active"
-      [routerLinkActiveOptions]="{ exact: true }"
-      >Dashboard</a
+@if (auth.authenticated()) {
+  <header class="topbar">
+    <a class="brand" routerLink="/dashboard"
+      ><span class="brand-mark">F</span><span>Folio</span></a
     >
-    <a routerLink="/yearly-plan" routerLinkActive="active">Yearly plan</a>
-  </nav>
-  <div class="profile-wrap">
-    <button
-      class="profile"
-      type="button"
-      aria-haspopup="menu"
-      [attr.aria-expanded]="profileOpen"
-      (click)="toggleProfile()"
-    >
-      <span class="profile-dot">{{ initials() }}</span
-      ><span class="profile-name">{{ userName }}</span
-      ><i class="bi bi-chevron-down"></i>
-    </button>
-    @if (profileOpen) {
-      <div class="profile-menu" role="menu">
-        <span class="profile-menu-label">Display name</span>
-        <input
-          class="profile-input"
-          type="text"
-          [(ngModel)]="userName"
-          (blur)="saveUserName()"
-          (keyup.enter)="saveUserName()"
-          aria-label="Display name"
-        />
-        <button
-          class="profile-save"
-          type="button"
-          (click)="saveUserName(); profileOpen = false"
-        >
-          Save profile
-        </button>
-      </div>
-    }
-  </div>
-</header>
+    <nav class="topnav" aria-label="Primary navigation">
+      <a
+        routerLink="/dashboard"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        >Dashboard</a
+      >
+      <a routerLink="/yearly-plan" routerLinkActive="active">Yearly plan</a>
+    </nav>
+    <div class="profile-wrap">
+      <button
+        class="profile"
+        type="button"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="profileOpen"
+        (click)="toggleProfile()"
+      >
+        <span class="profile-dot">{{ initials() }}</span
+        ><span class="profile-name">{{ auth.email() ?? userName }}</span
+        ><i class="bi bi-chevron-down"></i>
+      </button>
+      @if (profileOpen) {
+        <div class="profile-menu" role="menu">
+          <span class="profile-menu-label">Display name</span>
+          <input
+            class="profile-input"
+            type="text"
+            [(ngModel)]="userName"
+            (blur)="saveUserName()"
+            (keyup.enter)="saveUserName()"
+            aria-label="Display name"
+          />
+          <button
+            class="profile-save"
+            type="button"
+            (click)="saveUserName(); profileOpen = false"
+          >
+            Save profile
+          </button>
+          <div class="sync-indicator">
+            <span>Cloud sync</span>
+            <strong [attr.data-state]="plannerStore.syncStatus()">
+              {{ plannerStore.syncStatus() }}
+            </strong>
+          </div>
+          <button class="profile-signout" type="button" (click)="signOut()">
+            Sign out
+          </button>
+        </div>
+      }
+    </div>
+  </header>
+}
 <router-outlet></router-outlet>

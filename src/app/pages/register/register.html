@@ -1,0 +1,37 @@
+<main class="auth-page">
+  <section class="auth-panel" aria-labelledby="register-title">
+    <a class="auth-brand" routerLink="/register"><span>F</span> Folio</a>
+    <p class="auth-eyebrow">A clearer view of what comes next</p>
+    <h1 id="register-title">Create your account</h1>
+    <p class="auth-copy">Start building your personal investment plan.</p>
+    <form class="auth-form" (ngSubmit)="submit()">
+      <label for="register-email">Email</label>
+      <input
+        id="register-email"
+        type="email"
+        name="email"
+        [(ngModel)]="email"
+        autocomplete="email"
+        required
+      />
+      <label for="register-password">Password</label>
+      <input
+        id="register-password"
+        type="password"
+        name="password"
+        [(ngModel)]="password"
+        autocomplete="new-password"
+        required
+      />
+      @if (error) {
+        <p class="auth-error" role="alert">{{ error }}</p>
+      }
+      <button class="auth-submit" type="submit" [disabled]="busy">
+        {{ busy ? 'Creating account...' : 'Create account' }}
+      </button>
+    </form>
+    <p class="auth-switch">
+      Already have an account? <a routerLink="/login">Sign in</a>
+    </p>
+  </section>
+</main>

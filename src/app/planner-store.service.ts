@@ -1,4 +1,6 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { AuthService } from './auth.service';
+import { PlannerApiService, PlannerPayload } from './planner-api.service';
 
 export interface InvestmentItem {
   name: string;
@@ -13,6 +15,8 @@ export interface InvestmentCategory {
 
 @Injectable({ providedIn: 'root' })
 export class PlannerStore {
+  private readonly api = inject(PlannerApiService);
+  private readonly auth = inject(AuthService);
   readonly currentYear = new Date().getFullYear();
   readonly months = [
     { name: 'January', short: 'JAN' },
@@ -30,7 +34,9 @@ export class PlannerStore {
   ];
   readonly currentMonth =
     this.months[new Date().getMonth()]?.name ?? this.months[0].name;
+    
   private readonly storageKey = 'folio-investment-plan';
+  private readonly ownerStorageKey = 'folio-planner-owner';
   private readonly salaryStorageKey = 'folio-monthly-salary';
   private readonly otherIncomeStorageKey = 'folio-monthly-other-income';
   private readonly updatedAtStorageKey = 'folio-month-plan-updated-at';
@@ -46,6 +52,13 @@ export class PlannerStore {
   readonly lastPlanUpdatedAt = signal<string | undefined>(
     this.loadLastPlanUpdatedAt(),
   );
+  readonly syncStatus = signal<'local' | 'loading' | 'saving' | 'synced' | 'error'>(
+    'local',
+  );
+  private hasRemotePlanner = false;
+  private hydrating = false;
+  private saveTimer: ReturnType<typeof setTimeout> | undefined;
+  private saveQueue: Promise<void> = Promise.resolve();
   readonly total = computed(() =>
     this.totalFor(this.activeMonth()),
   );
@@ -113,13 +126,13 @@ export class PlannerStore {
 
   private ensureMonthPlan(month: string): InvestmentCategory[] {
     const plans = this.monthPlans();
-    if (plans[month]) return plans[month];
+    if (plans[month]?.length) return plans[month];
 
     const monthIndex = this.months.findIndex((entry) => entry.name === month);
     let source: InvestmentCategory[] | undefined;
     for (let index = monthIndex - 1; index >= 0; index--) {
       const previousPlan = plans[this.months[index].name];
-      if (previousPlan) {
+      if (previousPlan?.length) {
         source = previousPlan;
         break;
       }
@@ -196,6 +209,120 @@ export class PlannerStore {
     } catch {
       return undefined;
     }
+  }
+
+  async loadFromBackend(): Promise<void> {
+    this.hydrating = true;
+    this.syncStatus.set('loading');
+    try {
+      let planner: PlannerPayload;
+      try {
+        planner = await this.api.getPlanner();
+        this.hasRemotePlanner = true;
+      } catch (error) {
+        if ((error as { status?: number })?.status !== 404) throw error;
+        const owner =
+          typeof localStorage === 'undefined'
+            ? null
+            : localStorage.getItem(this.ownerStorageKey);
+        const canMigrateLocal = !owner || owner === this.auth.email();
+        planner = await this.api.createPlanner(
+          canMigrateLocal
+            ? this.toPayload()
+            : { monthPlans: {}, salaries: {}, otherIncomes: {} },
+        );
+        this.hasRemotePlanner = true;
+      }
+      this.applyPlanner(planner);
+      this.persistLocal();
+      this.syncStatus.set('synced');
+    } catch (error) {
+      this.syncStatus.set('error');
+      throw error;
+    } finally {
+      this.hydrating = false;
+    }
+  }
+
+  stopBackendSync(): void {
+    if (this.saveTimer) clearTimeout(this.saveTimer);
+    this.saveTimer = undefined;
+    this.hasRemotePlanner = false;
+    this.syncStatus.set('local');
+  }
+
+  private applyPlanner(planner: PlannerPayload): void {
+    const existingPlans = this.monthPlans();
+    const colors = ['mint', 'blue', 'orange'];
+    const plans = Object.fromEntries(
+      Object.entries(planner.monthPlans ?? {}).map(([month, monthPlan]) => [
+        month,
+        (monthPlan.categories ?? []).map((category, index) => ({
+          name: category.name,
+          color:
+            existingPlans[month]?.find((current) => current.name === category.name)
+              ?.color ?? colors[index % colors.length],
+          items: (category.items ?? []).map((item) => ({
+            ...item,
+            actuals: item.actuals ?? {},
+          })),
+        })),
+      ]),
+    );
+    this.monthPlans.set(plans);
+    this.salaries.set(planner.salaries ?? {});
+    this.otherIncomes.set(planner.otherIncomes ?? {});
+    this.lastPlanUpdatedAt.set(planner.lastUpdatedUtc);
+  }
+
+  private toPayload(): PlannerPayload {
+    const monthPlans = Object.fromEntries(
+      Object.entries(this.monthPlans()).map(([month, categories]) => [
+        month,
+        {
+          categories: categories
+            .filter((category) => category.name.trim())
+            .map((category) => ({
+              name: category.name.trim(),
+              items: category.items
+                .filter((item) => item.name.trim())
+                .map((item) => ({
+                  name: item.name.trim(),
+                  amount: item.amount,
+                  actuals: item.actuals ?? {},
+                })),
+            })),
+        },
+      ]),
+    );
+    return {
+      monthPlans,
+      salaries: this.salaries(),
+      otherIncomes: this.otherIncomes(),
+    };
+  }
+
+  private scheduleBackendSave(): void {
+    if (!this.auth.authenticated() || this.hydrating) return;
+    if (this.saveTimer) clearTimeout(this.saveTimer);
+    this.saveTimer = setTimeout(() => {
+      const payload = this.toPayload();
+      this.saveQueue = this.saveQueue
+        .catch(() => undefined)
+        .then(async () => {
+          this.syncStatus.set('saving');
+          try {
+            const updated = this.hasRemotePlanner
+              ? await this.api.updatePlanner(payload)
+              : await this.api.createPlanner(payload);
+            this.hasRemotePlanner = true;
+            this.lastPlanUpdatedAt.set(updated.lastUpdatedUtc);
+            this.syncStatus.set('synced');
+          } catch {
+            this.syncStatus.set('error');
+          }
+        });
+    }, 400);
   }
 
   categoryTotal(category: InvestmentCategory | undefined): number {
@@ -289,6 +416,8 @@ export class PlannerStore {
         JSON.stringify(this.salaries()),
       );
     this.markLastUpdated();
+    this.persistLocal();
+    this.scheduleBackendSave();
   }
   setOtherIncome(month: string, value: number | string): void {
     const income = Math.max(0, Number(value) || 0);
@@ -299,6 +428,8 @@ export class PlannerStore {
         JSON.stringify(this.otherIncomes()),
       );
     this.markLastUpdated();
+    this.persistLocal();
+    this.scheduleBackendSave();
   }
   clearPlan(): void {
     this.monthPlans.set({});
@@ -311,6 +442,7 @@ export class PlannerStore {
       localStorage.setItem(this.otherIncomeStorageKey, '{}');
       localStorage.setItem(this.updatedAtStorageKey, '{}');
     }
+    this.scheduleBackendSave();
   }
   addCategory(): void {
     const month = this.activeMonth();
@@ -347,8 +479,21 @@ export class PlannerStore {
   }
   private persist(markUpdated = false): void {
     if (markUpdated) this.markLastUpdated();
+    this.persistLocal();
+    this.scheduleBackendSave();
+  }
+
+  private persistLocal(): void {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(this.storageKey, JSON.stringify(this.monthPlans()));
+      localStorage.setItem(this.salaryStorageKey, JSON.stringify(this.salaries()));
+      localStorage.setItem(this.otherIncomeStorageKey, JSON.stringify(this.otherIncomes()));
+      localStorage.setItem(
+        this.updatedAtStorageKey,
+        JSON.stringify(this.lastPlanUpdatedAt()),
+      );
+      const owner = this.auth.email();
+      if (owner) localStorage.setItem(this.ownerStorageKey, owner);
     }
   }
 
