@@ -7,9 +7,14 @@ interface AuthResponse {
   accessToken: string;
   expiresAtUtc: string;
   email: string;
+  displayName?: string;
 }
 
 interface StoredSession extends AuthResponse {}
+
+interface UserProfile {
+  displayName: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -17,6 +22,7 @@ export class AuthService {
   private readonly storedSession = this.readSession();
   readonly token = signal(this.storedSession?.accessToken ?? null);
   readonly email = signal(this.storedSession?.email ?? null);
+  readonly displayName = signal(this.storedSession?.displayName ?? null);
   readonly authenticated = computed(() => this.token() !== null);
 
   constructor(private readonly http: HttpClient) {}
@@ -35,14 +41,39 @@ export class AuthService {
 
     this.token.set(session.accessToken);
     this.email.set(session.email);
+    this.displayName.set(session.displayName || null);
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.setItem(this.storageKey, JSON.stringify(session));
     }
   }
 
+  async loadDisplayName(): Promise<string | null> {
+    const profile = await firstValueFrom(
+      this.http.get<UserProfile>(`${API_BASE_URL}/auth/profile`, {
+        headers: this.authHeaders(),
+      }),
+    );
+    this.displayName.set(profile.displayName || null);
+    this.persistDisplayName(profile.displayName);
+    return profile.displayName || null;
+  }
+
+  async saveDisplayName(displayName: string): Promise<void> {
+    const profile = await firstValueFrom(
+      this.http.put<UserProfile>(
+        `${API_BASE_URL}/auth/profile`,
+        { displayName },
+        { headers: this.authHeaders() },
+      ),
+    );
+    this.displayName.set(profile.displayName);
+    this.persistDisplayName(profile.displayName);
+  }
+
   logout(): void {
     this.token.set(null);
     this.email.set(null);
+    this.displayName.set(null);
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.removeItem(this.storageKey);
     }
@@ -67,5 +98,19 @@ export class AuthService {
       sessionStorage.removeItem(this.storageKey);
       return undefined;
     }
+  }
+
+  private authHeaders(): { Authorization: string } {
+    return { Authorization: `Bearer ${this.token() ?? ''}` };
+  }
+
+  private persistDisplayName(displayName: string): void {
+    if (typeof sessionStorage === 'undefined') return;
+    const current = this.readSession();
+    if (!current) return;
+    sessionStorage.setItem(
+      this.storageKey,
+      JSON.stringify({ ...current, displayName }),
+    );
   }
 }

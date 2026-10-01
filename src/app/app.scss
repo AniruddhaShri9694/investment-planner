@@ -1465,6 +1465,21 @@ h3 {
   font: 700 11px Arial;
 }
 
+.profile-save-status {
+  display: block;
+  margin-top: 8px;
+  color: #9cc3c8;
+  font: 11px Arial, sans-serif;
+}
+
+.profile-save-status[data-state='saved'] {
+  color: #70c5bd;
+}
+
+.profile-save-status[data-state='error'] {
+  color: #f0a194;
+}
+
 .profile-name {
   max-width: 190px;
   overflow: hidden;

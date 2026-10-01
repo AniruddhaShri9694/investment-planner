@@ -20,7 +20,7 @@
         (click)="toggleProfile()"
       >
         <span class="profile-dot">{{ initials() }}</span
-        ><span class="profile-name">{{ auth.email() ?? userName }}</span
+        ><span class="profile-name">{{ auth.displayName() || auth.email() || userName }}</span
         ><i class="bi bi-chevron-down"></i>
       </button>
       @if (profileOpen) {
@@ -30,17 +30,31 @@
             class="profile-input"
             type="text"
             [(ngModel)]="userName"
-            (blur)="saveUserName()"
-            (keyup.enter)="saveUserName()"
+            maxlength="60"
+            (keyup.enter)="saveAndCloseProfile()"
             aria-label="Display name"
           />
           <button
             class="profile-save"
             type="button"
-            (click)="saveUserName(); profileOpen = false"
+            (click)="saveAndCloseProfile()"
           >
             Save profile
           </button>
+          @if (profileSaveStatus() !== 'idle') {
+            <output
+              class="profile-save-status"
+              [attr.data-state]="profileSaveStatus()"
+            >
+              {{
+                profileSaveStatus() === 'saving'
+                  ? 'Saving to account...'
+                  : profileSaveStatus() === 'saved'
+                    ? 'Saved to account'
+                    : 'Could not save to account'
+              }}
+            </output>
+          }
           <div class="sync-indicator">
             <span>Cloud sync</span>
             <strong [attr.data-state]="plannerStore.syncStatus()">
