@@ -38,19 +38,48 @@ describe('PlannerStore monthly plans', () => {
     localStorage.removeItem('folio-monthly-arrears');
   });
 
-  it('copies January into a blank February without sharing item objects', () => {
+  it('copies a selected month plan including actuals into the blank month', () => {
+    const sourceItem = store.monthPlans()['January'][0].items[0];
+    sourceItem.actuals = { January: 500 };
     store.setActiveMonth('February');
+
+    expect(store.categories()).toEqual([]);
+
+    store.copyPlanFromMonth('January', 'February');
 
     expect(store.categories()).toEqual([
       {
         name: 'Investments',
         color: 'mint',
-        items: [{ name: 'Index fund', amount: 1500, actuals: {} }],
+        items: [
+          {
+            name: 'Index fund',
+            amount: 1500,
+            actuals: { February: 500 },
+          },
+        ],
       },
     ]);
     expect(store.categories()[0].items[0]).not.toBe(
-      store.monthPlans()['January'][0].items[0],
+      sourceItem,
     );
+    expect(sourceItem.actuals).toEqual({ January: 500 });
+  });
+
+  it('copies opening balance, salary, and other income from the selected month', () => {
+    store.setActiveMonth('February');
+    store.setArrears('January', 1200);
+    store.setSalary('January', 50000);
+    store.setOtherIncome('January', 800);
+    store.setArrears('February', 300);
+    store.setSalary('February', 1000);
+    store.setOtherIncome('February', 100);
+
+    store.copyPlanFromMonth('January', 'February');
+
+    expect(store.arrearsFor('February')).toBe(1200);
+    expect(store.salaryFor('February')).toBe(50000);
+    expect(store.otherIncomeFor('February')).toBe(800);
   });
 
   it('includes arrears in income balances and persists the monthly amount', () => {

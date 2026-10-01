@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -15,9 +15,28 @@ export class MonthPlan {
     inject(ActivatedRoute).snapshot.paramMap.get('month') ??
     this.store.currentMonth;
   protected readonly editing = signal(false);
+  protected readonly copyFromMonth = signal('');
+  protected readonly copyableMonths = computed(() =>
+    this.store.months.filter(
+      (entry) =>
+        entry.name !== this.month && this.store.hasPlanItems(entry.name),
+    ),
+  );
 
   constructor() {
     this.store.setActiveMonth(this.month);
+  }
+
+  protected selectedSourceMonth(): string {
+    const selected = this.copyFromMonth();
+    return this.copyableMonths().some((entry) => entry.name === selected)
+      ? selected
+      : (this.copyableMonths()[0]?.name ?? '');
+  }
+
+  protected copySelectedMonth(): void {
+    const sourceMonth = this.selectedSourceMonth();
+    if (sourceMonth) this.store.copyPlanFromMonth(sourceMonth, this.month);
   }
 
   protected startEditing(): void {

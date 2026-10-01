@@ -240,14 +240,14 @@ h3 {
 }
 
 .year-grid-section {
-  margin-top: 16px;
+  margin-top: 0px;
 }
 
 .year-month-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 10px;
-  margin-top: 28px;
+  margin-top: 15px;
 }
 
 .year-month-card {
@@ -376,7 +376,7 @@ h3 {
 
 .content-grid {
   display: grid;
-  grid-template-columns: 1.55fr 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
 }
 
@@ -415,7 +415,7 @@ h3 {
 .detail-section {
   border: 1px solid var(--line);
   background: var(--paper);
-  padding: 28px;
+  padding: 20px;
 }
 
 .year-pill {
@@ -1072,7 +1072,6 @@ h3 {
 }
 
 .empty-plan i {
-  color: #70c5bd;
   font-size: 30px;
 }
 
@@ -1084,6 +1083,120 @@ h3 {
 .empty-plan span {
   color: #9cc3c8;
   font: 12px Arial;
+}
+
+.copy-plan-panel {
+  display: grid;
+  grid-template-columns: 1fr 3fr 1.5fr 0.2fr;
+  align-items: end;
+  gap: 20px;
+  box-sizing: border-box;
+  padding: 20px 24px;
+  border: 1px solid #286078;
+  border-left: 3px solid #70c5bd;
+  border-radius: 5px;
+  background: #0c394b;
+  margin-top: inherit;
+}
+
+.copy-plan-heading .eyebrow {
+  margin-bottom: 5px;
+}
+
+.copy-plan-heading h2 {
+  max-width: 220px;
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.copy-plan-field {
+  display: grid;
+  gap: 6px;
+  color: #b9d0da;
+  font: 600 11px Arial, sans-serif;
+}
+
+.copy-plan-field select {
+  width: 100%;
+  min-height: 46px;
+  box-sizing: border-box;
+  padding: 9px 34px 9px 12px;
+  border: 1px solid #286078;
+  border-radius: 4px;
+  background: #092f40;
+  color: #d9f0ee;
+  font: 14px Arial, sans-serif;
+  cursor: pointer;
+}
+
+.copy-plan-field select:focus-visible {
+  outline: 2px solid #70c5bd;
+  outline-offset: 2px;
+}
+
+.copy-plan-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  color: #9cc3c8;
+  font: 11px Arial, sans-serif;
+  align-self: center;
+}
+
+.copy-plan-summary span {
+  padding: 6px 8px;
+  border: 1px solid #286078;
+  border-radius: 3px;
+  background: #10465a;
+  white-space: nowrap;
+}
+
+.copy-plan-summary strong {
+  color: #d9f0ee;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.copy-plan-panel > .primary-action {
+  min-height: 46px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .copy-plan-panel {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 1.2fr);
+    width: 100%;
+  }
+
+  .copy-plan-summary {
+    grid-column: 1;
+  }
+
+  .copy-plan-panel > .primary-action {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+}
+
+@media (max-width: 560px) {
+  .copy-plan-panel {
+    grid-template-columns: 1fr;
+    gap: 13px;
+    padding: 17px;
+  }
+
+  .copy-plan-summary,
+  .copy-plan-panel > .primary-action {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .copy-plan-panel > .primary-action {
+    justify-self: start;
+  }
 }
 
 .income-panel {

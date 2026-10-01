@@ -35,14 +35,6 @@ export const routes: Routes = [
       import('./pages/dashboard/dashboard').then((module) => module.Dashboard),
   },
   {
-    path: 'yearly-plan',
-    canActivate: [requireAuthentication],
-    loadComponent: () =>
-      import('./pages/yearly-plan/yearly-plan').then(
-        (module) => module.YearlyPlan,
-      ),
-  },
-  {
     path: 'month/:month',
     canActivate: [requireAuthentication],
     loadComponent: () =>

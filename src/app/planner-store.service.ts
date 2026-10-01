@@ -87,7 +87,7 @@ export class PlannerStore {
           const legacy = parsed as InvestmentCategory[];
           const migrated: Record<string, InvestmentCategory[]> = {};
           for (const month of this.months) {
-            migrated[month.name] = this.clonePlan(legacy, month.name, true);
+            migrated[month.name] = this.clonePlan(legacy, month.name, month.name);
           }
           localStorage.setItem(this.storageKey, JSON.stringify(migrated));
           return migrated;
@@ -107,15 +107,16 @@ export class PlannerStore {
   private clonePlan(
     categories: InvestmentCategory[],
     month: string,
-    preserveActual = false,
+    actualSourceMonth?: string,
   ): InvestmentCategory[] {
     return categories.map((category) => ({
       ...category,
       items: category.items.map((item) => ({
         ...item,
         actuals:
-          preserveActual && item.actuals?.[month] !== undefined
-            ? { [month]: item.actuals[month] }
+          actualSourceMonth &&
+          item.actuals?.[actualSourceMonth] !== undefined
+            ? { [month]: item.actuals[actualSourceMonth] }
             : {},
       })),
     }));
@@ -128,21 +129,89 @@ export class PlannerStore {
 
   private ensureMonthPlan(month: string): InvestmentCategory[] {
     const plans = this.monthPlans();
-    if (plans[month]?.length) return plans[month];
+    if (plans[month]) return plans[month];
 
-    const monthIndex = this.months.findIndex((entry) => entry.name === month);
-    let source: InvestmentCategory[] | undefined;
-    for (let index = monthIndex - 1; index >= 0; index--) {
-      const previousPlan = plans[this.months[index].name];
-      if (previousPlan?.length) {
-        source = previousPlan;
-        break;
-      }
-    }
-    const copiedPlan = this.clonePlan(source ?? [], month);
-    this.monthPlans.update((current) => ({ ...current, [month]: copiedPlan }));
+    const emptyPlan: InvestmentCategory[] = [];
+    this.monthPlans.update((current) => ({ ...current, [month]: emptyPlan }));
     this.persist();
-    return copiedPlan;
+    return emptyPlan;
+  }
+
+  categoriesFor(month: string): InvestmentCategory[] {
+    return this.monthPlans()[month] ?? [];
+  }
+
+  hasPlanData(month: string): boolean {
+    return this.categoriesFor(month).some(
+      (category) =>
+        category.name.trim() ||
+        category.items.some((item) => this.hasItemData(item)),
+    );
+  }
+
+  hasPlanItems(month: string): boolean {
+    return this.categoriesFor(month).some((category) =>
+      category.items.some((item) => this.hasItemData(item)),
+    );
+  }
+
+  categoryCountFor(month: string): number {
+    return this.categoriesFor(month).filter(
+      (category) =>
+        category.name.trim() ||
+        category.items.some((item) => this.hasItemData(item)),
+    ).length;
+  }
+
+  itemCountFor(month: string): number {
+    return this.categoriesFor(month).reduce(
+      (count, category) =>
+        count + category.items.filter((item) => this.hasItemData(item)).length,
+      0,
+    );
+  }
+
+  copyPlanFromMonth(sourceMonth: string, targetMonth: string): void {
+    if (sourceMonth === targetMonth || !this.hasPlanItems(sourceMonth)) return;
+
+    const copiedPlan = this.clonePlan(
+      this.categoriesFor(sourceMonth),
+      targetMonth,
+      sourceMonth,
+    );
+    this.monthPlans.update((plans) => ({ ...plans, [targetMonth]: copiedPlan }));
+    this.salaries.update((values) =>
+      this.copyMonthAmount(values, sourceMonth, targetMonth),
+    );
+    this.otherIncomes.update((values) =>
+      this.copyMonthAmount(values, sourceMonth, targetMonth),
+    );
+    this.arrears.update((values) =>
+      this.copyMonthAmount(values, sourceMonth, targetMonth),
+    );
+    this.persist(true);
+  }
+
+  private copyMonthAmount(
+    values: Record<string, number>,
+    sourceMonth: string,
+    targetMonth: string,
+  ): Record<string, number> {
+    const updated = { ...values };
+    if (Object.hasOwn(values, sourceMonth)) {
+      updated[targetMonth] = values[sourceMonth];
+    } else {
+      delete updated[targetMonth];
+    }
+    return updated;
+  }
+
+  private hasItemData(item: InvestmentItem): boolean {
+    return (
+      Boolean(item.name.trim()) ||
+      Number(item.amount) > 0 ||
+      Object.values(item.actuals ?? {}).some((actual) => actual > 0)
+    );
   }
 
   private screenshotPlan(): InvestmentCategory[] {

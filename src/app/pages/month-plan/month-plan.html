@@ -7,8 +7,8 @@
         Review your budget and record what you actually paid for each item.
       </p>
     </div>
-    <a class="outline-action" routerLink="/yearly-plan"
-      ><i class="bi bi-arrow-left"></i> Back to yearly plan</a
+    <a class="outline-action" routerLink="/dashboard"
+      ><i class="bi bi-arrow-left"></i> Back to Dashboard</a
     >
   </section>
   <section class="month-income panel">
@@ -199,6 +199,62 @@
           <i class="bi bi-pencil"></i> Edit plan
         </button>
       </div>
+      @if (!store.hasPlanItems(month) && copyableMonths().length) {
+        <section class="copy-plan-panel">
+          <div class="copy-plan-heading">
+            <p class="eyebrow">Start with a saved plan</p>
+            <h2>Copy another month's plan</h2>
+          </div>
+          <label class="copy-plan-field">
+            Source month
+            <select
+              [ngModel]="selectedSourceMonth()"
+              (ngModelChange)="copyFromMonth.set($event)"
+            >
+              @for (source of copyableMonths(); track source.name) {
+                <option [value]="source.name">
+                  {{ source.name }} ·
+                  {{ store.categoryCountFor(source.name) }} categories ·
+                  {{ store.itemCountFor(source.name) }} items
+                </option>
+              }
+            </select>
+          </label>
+          <div class="copy-plan-summary">
+            <span>{{ store.categoryCountFor(selectedSourceMonth()) }} categories</span>
+            <span>{{ store.itemCountFor(selectedSourceMonth()) }} items</span>
+            <span
+              >Opening ₹{{
+                store.formatCurrency(store.arrearsFor(selectedSourceMonth()))
+              }}</span
+            >
+            <span
+              >Salary ₹{{
+                store.formatCurrency(store.salaryFor(selectedSourceMonth()))
+              }}</span
+            >
+            <span
+              >Other ₹{{
+                store.formatCurrency(
+                  store.otherIncomeFor(selectedSourceMonth())
+                )
+              }}</span
+            >
+            <strong
+              >₹{{
+                store.formatCurrency(store.totalFor(selectedSourceMonth()))
+              }} planned</strong
+            >
+          </div>
+          <button
+            class="primary-action"
+            type="button"
+            (click)="copySelectedMonth()"
+          >
+            <i class="bi bi-copy"></i> Copy to {{ month }}
+          </button>
+        </section>
+      }
       @if (store.categories().length) {
         <div class="read-only-categories">
           @for (category of store.categories(); track $index) {
