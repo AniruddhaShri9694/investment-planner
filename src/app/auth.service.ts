@@ -42,8 +42,8 @@ export class AuthService {
     this.token.set(session.accessToken);
     this.email.set(session.email);
     this.displayName.set(session.displayName || null);
-    if (typeof sessionStorage !== 'undefined') {
-      sessionStorage.setItem(this.storageKey, JSON.stringify(session));
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(this.storageKey, JSON.stringify(session));
     }
   }
 
@@ -74,15 +74,15 @@ export class AuthService {
     this.token.set(null);
     this.email.set(null);
     this.displayName.set(null);
-    if (typeof sessionStorage !== 'undefined') {
-      sessionStorage.removeItem(this.storageKey);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(this.storageKey);
     }
   }
 
   private readSession(): StoredSession | undefined {
-    if (typeof sessionStorage === 'undefined') return undefined;
+    if (typeof localStorage === 'undefined') return undefined;
     try {
-      const saved = sessionStorage.getItem(this.storageKey);
+      const saved = localStorage.getItem(this.storageKey);
       if (!saved) return undefined;
       const session = JSON.parse(saved) as StoredSession;
       if (
@@ -90,12 +90,12 @@ export class AuthService {
         !session.email ||
         new Date(session.expiresAtUtc).getTime() <= Date.now()
       ) {
-        sessionStorage.removeItem(this.storageKey);
+        localStorage.removeItem(this.storageKey);
         return undefined;
       }
       return session;
     } catch {
-      sessionStorage.removeItem(this.storageKey);
+      localStorage.removeItem(this.storageKey);
       return undefined;
     }
   }
@@ -105,10 +105,10 @@ export class AuthService {
   }
 
   private persistDisplayName(displayName: string): void {
-    if (typeof sessionStorage === 'undefined') return;
+    if (typeof localStorage === 'undefined') return;
     const current = this.readSession();
     if (!current) return;
-    sessionStorage.setItem(
+    localStorage.setItem(
       this.storageKey,
       JSON.stringify({ ...current, displayName }),
     );
