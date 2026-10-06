@@ -30,3 +30,19 @@ body,
   color: var(--coral) !important;
   border-color: var(--coral) !important;
 }
+
+@media (max-width: 850px) {
+  html,
+  body {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .page-shell {
+    height: auto;
+    min-height: calc(100dvh - 76px);
+    overflow: visible;
+  }
+}
