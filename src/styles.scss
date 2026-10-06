@@ -31,7 +31,7 @@ body,
   border-color: var(--coral) !important;
 }
 
-@media (max-width: 850px) {
+@media (max-width: 850px), (hover: none) and (pointer: coarse) {
   html,
   body {
     height: auto;
