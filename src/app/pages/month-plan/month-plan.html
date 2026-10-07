@@ -52,6 +52,13 @@
         (ngModelChange)="store.setOtherIncome(month, $event)"
         placeholder="Enter other income"
     /></label>
+    <div class="balance-result total-income">
+      <span>Total income</span>
+      <strong
+        >₹{{ store.formatCurrency(store.totalIncomeFor(month)) }}</strong
+      >
+      <small>Opening balance + Salary + Other income</small>
+    </div>
     <div
       class="balance-result"
       [class.negative]="store.availableBalanceFor(month) < 0"
@@ -64,7 +71,7 @@
           ? "Enter income to calculate"
           : store.availableBalanceFor(month) < 0
             ? "Planned values exceed income"
-            : "Based on salary + other income + arrears"
+            : "Incomes values - Total Budgeted values"
       }}</small>
     </div>
     <div
